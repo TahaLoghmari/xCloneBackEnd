@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("xCloneBackEnd")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2ac26db1b22fdc2fd4379cd47895b57cacb1b413")]
 [assembly: System.Reflection.AssemblyProductAttribute("xCloneBackEnd")]
 [assembly: System.Reflection.AssemblyTitleAttribute("xCloneBackEnd")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
