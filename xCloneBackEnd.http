@@ -1,0 +1,6 @@
+@xCloneBackEnd_HostAddress = http://localhost:5230
+
+GET {{xCloneBackEnd_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
