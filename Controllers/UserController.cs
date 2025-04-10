@@ -1,6 +1,8 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using TwitterCloneBackEnd.Models;
 using TwitterCloneBackEnd.Models.Dto;
 using TwitterCloneBackEnd.Services;

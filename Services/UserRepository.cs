@@ -1,6 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
+using System.Web;
+using CloudinaryDotNet;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using TwitterCloneBackEnd.Models;
 using TwitterCloneBackEnd.Models.Data;
@@ -11,7 +16,7 @@ namespace TwitterCloneBackEnd.Services
     public class UserRepository : IUserRepository 
     {
         private readonly TwitterDbContext _context;
-        public UserRepository(TwitterDbContext context)
+        public UserRepository(TwitterDbContext context )
         {
             _context = context;
         }

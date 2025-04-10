@@ -31,9 +31,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowCredentials());
 });
-
 builder.Services.AddControllers();
-
 builder.Services.AddDbContext<TwitterDbContext>(options => {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
