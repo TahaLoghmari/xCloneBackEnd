@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Web;
 using CloudinaryDotNet;
+using FluentEmail.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,8 @@ namespace TwitterCloneBackEnd.Services
     public class UserRepository : IUserRepository 
     {
         private readonly TwitterDbContext _context;
-        public UserRepository(TwitterDbContext context )
+        
+        public UserRepository(TwitterDbContext context  )
         {
             _context = context;
         }

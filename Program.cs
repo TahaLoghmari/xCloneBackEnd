@@ -35,7 +35,6 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<TwitterDbContext>(options => {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
-
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "File Uploader API", Version = "v1" });

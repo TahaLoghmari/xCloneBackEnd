@@ -1,12 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "CY8Nb0npu0g=",
+  "dgSpecHash": "esUaDJHiXwA=",
   "success": true,
   "projectFilePath": "/home/medtahaloghmari/Desktop/Projects/xCloneBackEnd/xCloneBackEnd.csproj",
   "expectedPackageFiles": [
     "/home/medtahaloghmari/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
     "/home/medtahaloghmari/.nuget/packages/cloudinarydotnet/1.27.4/cloudinarydotnet.1.27.4.nupkg.sha512",
     "/home/medtahaloghmari/.nuget/packages/dotnetenv/3.1.1/dotnetenv.3.1.1.nupkg.sha512",
+    "/home/medtahaloghmari/.nuget/packages/fluentemail.core/3.0.2/fluentemail.core.3.0.2.nupkg.sha512",
+    "/home/medtahaloghmari/.nuget/packages/fluentemail.smtp/3.0.2/fluentemail.smtp.3.0.2.nupkg.sha512",
     "/home/medtahaloghmari/.nuget/packages/google.apis/1.69.0/google.apis.1.69.0.nupkg.sha512",
     "/home/medtahaloghmari/.nuget/packages/google.apis.auth/1.69.0/google.apis.auth.1.69.0.nupkg.sha512",
     "/home/medtahaloghmari/.nuget/packages/google.apis.core/1.69.0/google.apis.core.1.69.0.nupkg.sha512",

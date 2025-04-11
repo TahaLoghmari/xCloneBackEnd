@@ -66,9 +66,36 @@ namespace TwitterCloneBackEnd.Services
         }
         public async Task<IEnumerable<Post>> GetAllPosts()
         {
-            var allPosts = await _context.Posts.ToListAsync() ; 
-            if ( allPosts == null ) throw new KeyNotFoundException("No posts were found.");
-            return allPosts ;
+            var allPosts = await _context.Posts
+                .Select(p => new Post
+                {
+                    Id = p.Id,
+                    UserId = p.UserId,
+                    CommentsCount = p.CommentsCount,
+                    SharesCount = p.SharesCount,
+                    LikesCount = p.LikesCount,
+                    ViewsCount = p.ViewsCount,
+                    MediaUploadPath = p.MediaUploadPath,
+                    MediaUploadType = p.MediaUploadType,
+                    Content = p.Content,
+                    CreatedAt = p.CreatedAt,
+                    UpdatedAt = p.UpdatedAt,
+                    OriginalPostId = p.OriginalPostId,
+                    IsRetweet = p.IsRetweet,
+                    Creator = new User
+                    {
+                        Id = p.Creator.Id,
+                        UserName = p.Creator.UserName,
+                        DisplayName = p.Creator.DisplayName,
+                        ImageUrl = p.Creator.ImageUrl
+                    }
+                })
+                .ToListAsync();
+            
+            if (allPosts == null || !allPosts.Any()) 
+                throw new KeyNotFoundException("No posts were found.");
+                
+            return allPosts;
         }
         public async Task<Post> UpdatePost(int postId, PostCreationDto updatedPost)
         {

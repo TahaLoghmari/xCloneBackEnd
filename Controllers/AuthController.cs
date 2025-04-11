@@ -1,3 +1,4 @@
+using FluentEmail.Core;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -10,6 +11,7 @@ using System.Text;
 using TwitterCloneBackEnd.Models;
 using TwitterCloneBackEnd.Models.Data;
 using TwitterCloneBackEnd.Models.Dto;
+using TwitterCloneBackEnd.Services;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -18,7 +20,7 @@ public class AuthController : ControllerBase
     private readonly TwitterDbContext _context;
     private readonly IConfiguration _configuration;
 
-    public AuthController(TwitterDbContext context, IConfiguration configuration)
+    public AuthController(TwitterDbContext context, IConfiguration configuration )
     {
         _context = context;
         _configuration = configuration;
@@ -59,10 +61,13 @@ public class AuthController : ControllerBase
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password),
             BirthDate = model.BirthDate
         };
-
+        
         _context.Users.Add(user);
+
         await _context.SaveChangesAsync();
+
         var token = GenerateJwtToken(user.UserName, user.Id);
+
         return Ok(new { token });
     }
     private string GenerateJwtToken(string username, int userId)
