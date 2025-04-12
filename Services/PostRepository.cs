@@ -23,6 +23,37 @@ namespace TwitterCloneBackEnd.Services
                 .Where(p => p.UserId == UserId)
                 .ToListAsync();
         }
+        public async Task<IEnumerable<Post>> GetPaginatedPosts(int page, int pageSize)
+        {
+            return await _context.Posts
+                .Select(p => new Post
+                {
+                    Id = p.Id,
+                    UserId = p.UserId,
+                    CommentsCount = p.CommentsCount,
+                    SharesCount = p.SharesCount,
+                    LikesCount = p.LikesCount,
+                    ViewsCount = p.ViewsCount,
+                    MediaUploadPath = p.MediaUploadPath,
+                    MediaUploadType = p.MediaUploadType,
+                    Content = p.Content,
+                    CreatedAt = p.CreatedAt,
+                    UpdatedAt = p.UpdatedAt,
+                    OriginalPostId = p.OriginalPostId,
+                    IsRetweet = p.IsRetweet,
+                    Creator = new User
+                    {
+                        Id = p.Creator.Id,
+                        UserName = p.Creator.UserName,
+                        DisplayName = p.Creator.DisplayName,
+                        ImageUrl = p.Creator.ImageUrl
+                    }
+                })
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
         public async Task<Post> CreatePost(PostCreationDto newPostDto, int userId)
         {
             if (newPostDto == null)

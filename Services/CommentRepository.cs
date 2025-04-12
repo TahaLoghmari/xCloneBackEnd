@@ -42,6 +42,33 @@ namespace TwitterCloneBackEnd.Services
             var comment = _context.Comments.FirstOrDefaultAsync( c => c.Id == commentId );
             return comment ; 
         }
+        public async Task<IEnumerable<Comment>> GetPaginatedComments(int page, int pageSize , int postId)
+        {
+            var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
+
+            if (!postExists) return Enumerable.Empty<Comment>();;
+            
+            return await _context.Comments
+                .Where(c => c.PostId == postId && c.ParentCommentId == null)
+                .Select(c => new Comment {
+                    Id = c.Id,
+                    UserId = c.UserId,
+                    PostId = c.PostId,
+                    CreatedAt = c.CreatedAt,
+                    Content = c.Content,
+                    LikesCount = c.LikesCount,
+                    RepliesCount = c.RepliesCount,
+                    Creator = new User {
+                        Id = c.Creator.Id,
+                        UserName = c.Creator.UserName,
+                        ImageUrl = c.Creator.ImageUrl
+                    }
+                })
+                .OrderByDescending(c => c.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
         public async Task<IEnumerable<Comment>> GetCommentsForPost(int postId)
         {
             var comments = await _context.Comments.Where( c => c.PostId == postId ).ToListAsync();

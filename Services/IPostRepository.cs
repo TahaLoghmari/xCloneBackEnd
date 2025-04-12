@@ -14,5 +14,6 @@ namespace TwitterCloneBackEnd.Services
         Task<IEnumerable<Post>> GetAllPosts();
         Task<Post> UpdatePost(int postId, PostCreationDto updatedPost);
         Task<Post> RetweetPost(int originalPostId, int userId );
+        Task<IEnumerable<Post>> GetPaginatedPosts(int page, int pageSize);
     }
 }
