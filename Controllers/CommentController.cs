@@ -45,13 +45,6 @@ namespace TwitterCloneBackEnd.Controllers
             return Ok(comments);
         }
         [Authorize]
-        [HttpGet("post/paginated/{postId}")]
-        public async Task<ActionResult<IEnumerable<Comment>>> GetPaginatedComments(int postId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-        {
-            var comments = await _comment.GetPaginatedComments(page,pageSize,postId);
-            return Ok(comments);
-        }
-        [Authorize]
         [HttpGet("replies/{commentId}")]
         public async Task<ActionResult<IEnumerable<Comment>>> GetRepliesForComment( int commentId )
         {

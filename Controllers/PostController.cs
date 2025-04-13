@@ -36,14 +36,6 @@ namespace TwitterCloneBackEnd.Controllers
             return Ok(newPost);
         }
         [Authorize]
-        [HttpGet("paginatedPosts")]
-        public async Task<ActionResult<IEnumerable<Post>>> GetPaginatedPosts([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-        {
-            var paginatedPosts = await _Post.GetPaginatedPosts(page, pageSize);
-            if (paginatedPosts == null) return NotFound("No Posts were Found");
-            return Ok(paginatedPosts);
-        }
-        [Authorize]
         [HttpDelete("deletePost/{PostId}")]
         public async Task<IActionResult> DeletePost( int PostId ) 
         {

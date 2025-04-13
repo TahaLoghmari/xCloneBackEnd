@@ -23,37 +23,6 @@ namespace TwitterCloneBackEnd.Services
                 .Where(p => p.UserId == UserId)
                 .ToListAsync();
         }
-        public async Task<IEnumerable<Post>> GetPaginatedPosts(int page, int pageSize)
-        {
-            return await _context.Posts
-                .Select(p => new Post
-                {
-                    Id = p.Id,
-                    UserId = p.UserId,
-                    CommentsCount = p.CommentsCount,
-                    SharesCount = p.SharesCount,
-                    LikesCount = p.LikesCount,
-                    ViewsCount = p.ViewsCount,
-                    MediaUploadPath = p.MediaUploadPath,
-                    MediaUploadType = p.MediaUploadType,
-                    Content = p.Content,
-                    CreatedAt = p.CreatedAt,
-                    UpdatedAt = p.UpdatedAt,
-                    OriginalPostId = p.OriginalPostId,
-                    IsRetweet = p.IsRetweet,
-                    Creator = new User
-                    {
-                        Id = p.Creator.Id,
-                        UserName = p.Creator.UserName,
-                        DisplayName = p.Creator.DisplayName,
-                        ImageUrl = p.Creator.ImageUrl
-                    }
-                })
-                .OrderByDescending(p => p.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-        }
         public async Task<Post> CreatePost(PostCreationDto newPostDto, int userId)
         {
             if (newPostDto == null)
@@ -91,7 +60,25 @@ namespace TwitterCloneBackEnd.Services
         }
         public async Task<Post> GetPostById(int postId)
         {
-            var Post = await _context.Posts.FirstOrDefaultAsync( p => p.Id == postId );
+            var Post = await _context.Posts
+            .Where(p => p.Id == postId)
+            .Select(p => new Post {
+                Id = p.Id,
+                UserId = p.Creator.Id,
+                CommentsCount = p.CommentsCount,
+                SharesCount = p.SharesCount,
+                LikesCount = p.LikesCount,
+                ViewsCount = p.ViewsCount,
+                Content = p.Content,
+                IsRetweet = false,
+                Creator = new User {
+                    UserName = p.Creator.UserName,
+                    Id = p.Creator.Id,
+                    DisplayName = p.Creator.DisplayName,
+                    ImageUrl = p.Creator.ImageUrl
+                }
+            })
+            .FirstOrDefaultAsync();
             if ( Post == null ) throw new KeyNotFoundException($"Post with ID {postId} was not found.");
             return Post ; 
         }
@@ -121,10 +108,8 @@ namespace TwitterCloneBackEnd.Services
                         ImageUrl = p.Creator.ImageUrl
                     }
                 })
+                .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
-            
-            if (allPosts == null || !allPosts.Any()) 
-                throw new KeyNotFoundException("No posts were found.");
                 
             return allPosts;
         }
