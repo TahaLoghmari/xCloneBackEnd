@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TwitterCloneBackEnd.Models;
+using TwitterCloneBackEnd.Models.Dto;
 using TwitterCloneBackEnd.Services;
 
 namespace TwitterCloneBackEnd.Controllers
@@ -14,49 +14,47 @@ namespace TwitterCloneBackEnd.Controllers
 
         [Authorize]
         [HttpPost("comment/{commentId}/{userId}")]
-        public async Task<ActionResult<Like>> AddLikeToComment( int commentId , int userId )
+        public async Task<ActionResult<LikeResponseDTO?>> AddLikeToComment( int userId , int commentId )
         {
-            var newLike = await _like.AddLikeToComment(commentId,userId);
+            var newLike = await _like.AddLikeToComment( userId , commentId);
             if ( newLike == null ) return NotFound();
             return Ok(newLike);
         }
         [Authorize]
         [HttpPost("post/{postId}/{userId}")]
-        public async Task<ActionResult<Like>> AddLikeToPost( int postId , int userId )
+        public async Task<ActionResult<LikeResponseDTO>> AddLikeToPost( int userId , int postId )
         {
-            var newLike = await _like.AddLikeToPost(postId,userId);
+            var newLike = await _like.AddLikeToPost( userId ,  postId);
             if ( newLike == null ) return NotFound();
             return Ok(newLike);
         }
         [Authorize]
         [HttpGet("comment/{commentId}")]
-        public async Task<ActionResult<IEnumerable<Like>>> GetLikesForComment(int commentId )
+        public async Task<ActionResult<IEnumerable<LikeResponseDTO?>>> GetLikesForComment( int commentId )
         {
             var Likes = await _like.GetLikesForComment(commentId);
-            if ( !Likes.Any()) return NotFound();
             return Ok(Likes);
         }
         [Authorize]
         [HttpGet("post/{postId}")]
-        public async Task<ActionResult<IEnumerable<Like>>> GetLikesForPost(int postId )
+        public async Task<ActionResult<IEnumerable<LikeResponseDTO?>>> GetLikesForPost(int postId )
         {
             var Likes = await _like.GetLikesForPost(postId);
-            if ( !Likes.Any() ) return NotFound();
             return Ok(Likes);
         }
         [Authorize]
         [HttpDelete("comment/{commentId}/{userId}")]
-        public async Task<IActionResult> RemoveLikeFromComment( int commentId , int userId )
+        public async Task<IActionResult> RemoveLikeFromComment( int userId , int commentId )
         {
-            var removed = await _like.RemoveLikeFromComment(commentId,userId);
+            var removed = await _like.RemoveLikeFromComment( userId ,  commentId);
             if ( !removed ) return NotFound();
             return Ok("Like was successfuly removed from that comment."); 
         }
         [Authorize]
         [HttpDelete("post/{postId}/{userId}")]
-        public async Task<IActionResult> RemoveLikeFromPost( int postId , int userId )
+        public async Task<IActionResult> RemoveLikeFromPost( int userId , int postId )
         {
-            var removed = await _like.RemoveLikeFromPost(postId,userId);
+            var removed = await _like.RemoveLikeFromPost( userId ,  postId);
             if ( !removed ) return NotFound();
             return Ok("Like was successfuly removed from that post."); 
         }

@@ -1,5 +1,3 @@
-using CloudinaryDotNet.Actions;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using TwitterCloneBackEnd.Models;
 using TwitterCloneBackEnd.Models.Data;
@@ -17,18 +15,23 @@ namespace TwitterCloneBackEnd.Services
             _context = context ; 
             
         }
-        public async Task<IEnumerable<Post>> GetUserPosts(int UserId)
+        public async Task<IEnumerable<PostResponseDto?>> GetUserPosts(int UserId)
         {
             return await _context.Posts
+                .Include(p => p.Creator)
+                .Include(p => p.OriginalPost)
+                .ThenInclude(op => op.Creator)
                 .Where(p => p.UserId == UserId)
+                .Select(p => PostResponseDto.Create(p))
+                .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
-        public async Task<Post> CreatePost(PostCreationDto newPostDto, int userId)
+        public async Task<PostResponseDto?> CreatePost(PostCreationDto newPostDto, int userId)
         {
-            if (newPostDto == null)
-            {
-                throw new ArgumentNullException(nameof(newPostDto), "No file was uploaded");
-            }
+            if ( newPostDto == null) return null ;
+
+            var user = await _context.Users.FirstOrDefaultAsync( u => u.Id == userId );
+            if ( user == null ) return null ;
 
             var newPost = new Post
             {
@@ -48,86 +51,66 @@ namespace TwitterCloneBackEnd.Services
             _context.Posts.Add(newPost);
             await _context.SaveChangesAsync();
             
-            return newPost;
+            var createdPost = await _context.Posts
+            .Include(p => p.Creator)
+            .FirstAsync(p => p.Id == newPost.Id);
+
+            return PostResponseDto.Create(createdPost);
         }
-        public async Task<string> DeletePost(int postId)
+        public async Task<bool> DeletePost(int postId)
         {
             var Post = await _context.Posts.FirstOrDefaultAsync( p => p.Id == postId );
-            if ( Post == null ) throw new KeyNotFoundException($"Post with ID {postId} was not found.");
+            if ( Post == null ) return false ;
+
             _context.Posts.Remove(Post);
             await _context.SaveChangesAsync() ; 
-            return "Post was sucessfully Deleted";
+
+            return true ;
         }
-        public async Task<Post> GetPostById(int postId)
+        public async Task<PostResponseDto?> GetPostById(int postId)
         {
             var Post = await _context.Posts
-            .Where(p => p.Id == postId)
-            .Select(p => new Post {
-                Id = p.Id,
-                UserId = p.Creator.Id,
-                CommentsCount = p.CommentsCount,
-                SharesCount = p.SharesCount,
-                LikesCount = p.LikesCount,
-                ViewsCount = p.ViewsCount,
-                Content = p.Content,
-                IsRetweet = false,
-                Creator = new User {
-                    UserName = p.Creator.UserName,
-                    Id = p.Creator.Id,
-                    DisplayName = p.Creator.DisplayName,
-                    ImageUrl = p.Creator.ImageUrl
-                }
-            })
-            .FirstOrDefaultAsync();
-            if ( Post == null ) throw new KeyNotFoundException($"Post with ID {postId} was not found.");
-            return Post ; 
+                .Include(p => p.Creator)
+                .Include(p => p.OriginalPost)
+                .ThenInclude(op => op.Creator)
+                .FirstOrDefaultAsync(p => p.Id == postId);
+
+            if (Post == null) return null; 
+
+            return PostResponseDto.Create(Post);
         }
-        public async Task<IEnumerable<Post>> GetAllPosts()
+        public async Task<IEnumerable<PostResponseDto?>> GetAllPosts()
         {
-            var allPosts = await _context.Posts
-                .Select(p => new Post
-                {
-                    Id = p.Id,
-                    UserId = p.UserId,
-                    CommentsCount = p.CommentsCount,
-                    SharesCount = p.SharesCount,
-                    LikesCount = p.LikesCount,
-                    ViewsCount = p.ViewsCount,
-                    MediaUploadPath = p.MediaUploadPath,
-                    MediaUploadType = p.MediaUploadType,
-                    Content = p.Content,
-                    CreatedAt = p.CreatedAt,
-                    UpdatedAt = p.UpdatedAt,
-                    OriginalPostId = p.OriginalPostId,
-                    IsRetweet = p.IsRetweet,
-                    Creator = new User
-                    {
-                        Id = p.Creator.Id,
-                        UserName = p.Creator.UserName,
-                        DisplayName = p.Creator.DisplayName,
-                        ImageUrl = p.Creator.ImageUrl
-                    }
-                })
+            return await _context.Posts
+                .Include(p => p.Creator)
+                .Include(p => p.OriginalPost)
+                .ThenInclude(op => op.Creator)
+                .Select(p => PostResponseDto.Create(p))
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
-                
-            return allPosts;
         }
-        public async Task<Post> UpdatePost(int postId, PostCreationDto updatedPost)
+        public async Task<PostResponseDto?> UpdatePost(int postId, PostCreationDto updatedPost)
         {
-            var Post = await _context.Posts.FirstOrDefaultAsync( p => p.Id == postId ) ;
-            if ( Post == null ) throw new KeyNotFoundException($"Post with ID {postId} was not found.");
+            var Post = await _context.Posts.Include( p => p.Creator ).FirstOrDefaultAsync( p => p.Id == postId ) ;
+            if ( Post == null ) return null ;
+
             Post.Content = updatedPost.Content ; 
+            Post.UpdatedAt = DateTime.UtcNow;
+
             await _context.SaveChangesAsync();
-            return Post ;
+            
+            return PostResponseDto.Create(Post);
         }
-        public async Task<Post> RetweetPost(int originalPostId, int userId )
+        public async Task<PostResponseDto?> RetweetPost(int originalPostId, int userId )
         {
-            var OriginalPost = await _context.Posts.FirstOrDefaultAsync( p => p.Id == originalPostId ) ;
-            if (OriginalPost == null)
-            {
-                throw new KeyNotFoundException($"Original post with ID {originalPostId} was not found.");
-            }
+            var OriginalPost = await _context.Posts
+            .Include ( p => p.Creator )
+            .FirstOrDefaultAsync( p => p.Id == originalPostId ) ;
+            if (OriginalPost == null) return null ; 
+
+            var user = await _context.Users.FirstOrDefaultAsync( u => u.Id == userId );
+            if ( user == null ) return null ; 
+
             var newPost = new Post
             {
                 UserId = userId,
@@ -143,10 +126,16 @@ namespace TwitterCloneBackEnd.Services
                 MediaUploadPath = OriginalPost.MediaUploadPath,
                 MediaUploadType = OriginalPost.MediaUploadType
             };
+            
             _context.Posts.Add(newPost);
             await _context.SaveChangesAsync();
-            
-            return newPost;
+
+
+           var createdPost = await _context.Posts
+            .Include(p => p.Creator)
+            .FirstAsync(p => p.Id == newPost.Id);
+
+            return PostResponseDto.Create(createdPost);
         }
     }
 }

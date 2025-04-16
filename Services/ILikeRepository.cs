@@ -1,14 +1,14 @@
-using TwitterCloneBackEnd.Models;
+using TwitterCloneBackEnd.Models.Dto ;
 
 namespace TwitterCloneBackEnd.Services
 {
     public interface ILikeRepository
     {
-        Task<Like> AddLikeToPost(int postId, int userId);
-        Task<Like> AddLikeToComment(int commentId, int userId);
-        Task<bool> RemoveLikeFromPost(int postId, int userId);
-        Task<bool> RemoveLikeFromComment(int commentId, int userId);
-        Task<IEnumerable<Like>> GetLikesForPost(int postId);
-        Task<IEnumerable<Like>> GetLikesForComment(int commentId);
+        Task<LikeResponseDTO?> AddLikeToPost( int userId , int postId );
+        Task<LikeResponseDTO?> AddLikeToComment( int userId , int commentId );
+        Task<bool> RemoveLikeFromPost( int userId , int postId);
+        Task<bool> RemoveLikeFromComment( int userId , int commentId );
+        Task<IEnumerable<LikeResponseDTO?>> GetLikesForPost(int postId);
+        Task<IEnumerable<LikeResponseDTO?>> GetLikesForComment(int commentId);
     }
 }

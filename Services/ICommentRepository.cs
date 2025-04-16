@@ -6,13 +6,13 @@ namespace TwitterCloneBackEnd.Services
     public interface ICommentRepository 
     {
 
-        Task<Comment> AddComment(CommentCreationDto newComment , int userId , int postId );
-        Task<Comment> ReplyToAComment(CommentCreationDto replyComment , int userId , int postId , int parentCommentId );
-        Task<Comment?> GetCommentById(int commentId);
-        Task<IEnumerable<Comment>> GetCommentsForPost(int postId);
-        Task<IEnumerable<Comment>> GetRepliesForComment(int commentId);
+        Task<CommentResponseDto?> AddComment(CommentCreationDto newComment , int userId , int postId );
+        Task<CommentResponseDto?> ReplyToAComment(CommentCreationDto replyComment , int userId , int postId , int parentCommentId );
+        Task<CommentResponseDto?> GetCommentById(int commentId);
+        Task<IEnumerable<CommentResponseDto?>> GetCommentsForPost(int postId);
+        Task<IEnumerable<CommentResponseDto?>> GetRepliesForComment(int commentId);
 
-        Task<Comment?> UpdateComment(CommentCreationDto updatedComment,int commentId);
+        Task<CommentResponseDto?> UpdateComment(CommentCreationDto updatedComment,int commentId);
 
         Task<bool> DeleteComment(int commentId);
     }

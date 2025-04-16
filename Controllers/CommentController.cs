@@ -14,7 +14,7 @@ namespace TwitterCloneBackEnd.Controllers
         public CommentController( ICommentRepository comment ) { _comment = comment ; }
         [Authorize]
         [HttpPost("{userId}/{postId}")]
-        public async Task<ActionResult<Comment>> AddComment( [FromBody] CommentCreationDto newCommentDto , int userId , int postId )
+        public async Task<ActionResult<CommentResponseDto?>> AddComment( [FromBody] CommentCreationDto newCommentDto , int userId , int postId )
         {
             var newComment = await _comment.AddComment(newCommentDto,userId,postId);
             if ( newComment == null ) return BadRequest();
@@ -22,7 +22,7 @@ namespace TwitterCloneBackEnd.Controllers
         }
         [Authorize]
         [HttpPost("{userId}/{postId}/{parentCommentId}")]
-        public async Task<ActionResult<Comment>> ReplyToAComment( [FromBody] CommentCreationDto replyComment , int userId , int postId , int parentCommentId)
+        public async Task<ActionResult<CommentResponseDto?>> ReplyToAComment( [FromBody] CommentCreationDto replyComment , int userId , int postId , int parentCommentId)
         {
             var newComment = await _comment.ReplyToAComment(replyComment,userId,postId,parentCommentId);
             if ( newComment == null ) return BadRequest();
@@ -30,7 +30,7 @@ namespace TwitterCloneBackEnd.Controllers
         }
         [Authorize]
         [HttpGet("{commentId}")]
-        public async Task<ActionResult<Comment>> GetCommentById( int commentId )
+        public async Task<ActionResult<CommentResponseDto?>> GetCommentById( int commentId )
         {
             var comment = await _comment.GetCommentById(commentId);
             if ( comment == null ) return NotFound();
@@ -38,23 +38,21 @@ namespace TwitterCloneBackEnd.Controllers
         }
         [Authorize]
         [HttpGet("post/{postId}")]
-        public async Task<ActionResult<IEnumerable<Comment>>> GetCommentsForPost( int postId ) 
+        public async Task<ActionResult<IEnumerable<CommentResponseDto?>>> GetCommentsForPost( int postId ) 
         {
             var comments = await _comment.GetCommentsForPost(postId);
-            if ( !comments.Any() ) return NotFound();
             return Ok(comments);
         }
         [Authorize]
         [HttpGet("replies/{commentId}")]
-        public async Task<ActionResult<IEnumerable<Comment>>> GetRepliesForComment( int commentId )
+        public async Task<ActionResult<IEnumerable<CommentResponseDto?>>> GetRepliesForComment( int commentId )
         {
             var comments = await _comment.GetRepliesForComment(commentId);
-            if ( !comments.Any() ) return NotFound();
             return Ok(comments);
         }
         [Authorize]
         [HttpPut("{commentId}")]
-        public async Task<ActionResult<Comment>> UpdateComment( [FromBody] CommentCreationDto updatedComment , int commentId ) 
+        public async Task<ActionResult<CommentResponseDto?>> UpdateComment( [FromBody] CommentCreationDto updatedComment , int commentId ) 
         {
             var newComment = await _comment.UpdateComment(updatedComment,commentId);
             if ( newComment == null ) return BadRequest();
