@@ -25,21 +25,21 @@ namespace TwitterCloneBackEnd.Controllers
         public async Task<ActionResult<LikeResponseDTO>> AddLikeToPost( int userId , int postId )
         {
             var newLike = await _like.AddLikeToPost( userId ,  postId);
-            if ( newLike == null ) return NotFound();
+            if ( newLike == null ) return BadRequest();
             return Ok(newLike);
         }
         [Authorize]
         [HttpGet("comment/{commentId}")]
-        public async Task<ActionResult<IEnumerable<LikeResponseDTO?>>> GetLikesForComment( int commentId )
+        public async Task<ActionResult<IEnumerable<LikeResponseDTO?>>> GetLikesForComment( int commentId , int currentUserId)
         {
-            var Likes = await _like.GetLikesForComment(commentId);
+            var Likes = await _like.GetLikesForComment(commentId,currentUserId);
             return Ok(Likes);
         }
         [Authorize]
         [HttpGet("post/{postId}")]
-        public async Task<ActionResult<IEnumerable<LikeResponseDTO?>>> GetLikesForPost(int postId )
+        public async Task<ActionResult<IEnumerable<LikeResponseDTO?>>> GetLikesForPost(int postId , int currentUserId)
         {
-            var Likes = await _like.GetLikesForPost(postId);
+            var Likes = await _like.GetLikesForPost(postId,currentUserId);
             return Ok(Likes);
         }
         [Authorize]

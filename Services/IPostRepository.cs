@@ -7,12 +7,12 @@ namespace TwitterCloneBackEnd.Services
 {
     public interface IPostRepository 
     {
-        Task<IEnumerable<PostResponseDto?>> GetUserPosts(int UserId );
+        Task<IEnumerable<PostResponseDto?>> GetUserPosts(int UserId , int currentUserId);
         Task<PostResponseDto?> CreatePost(PostCreationDto newPost , int UserId );
         Task<bool> DeletePost(int postId);
-        Task<PostResponseDto?> GetPostById(int postId);
-        Task<IEnumerable<PostResponseDto?>> GetAllPosts();
-        Task<PostResponseDto?> UpdatePost(int postId, PostCreationDto updatedPost);
+        Task<PostResponseDto?> GetPostById(int postId, int currentUserId);
+        Task<IEnumerable<PostResponseDto?>> GetAllPosts(int currentUserId);
+        Task<PostResponseDto?> UpdatePost(int postId, PostCreationDto updatedPost , int currentUserId);
         Task<PostResponseDto?> RetweetPost(int originalPostId, int userId );
     }
 }

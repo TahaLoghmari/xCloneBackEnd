@@ -8,8 +8,8 @@ namespace TwitterCloneBackEnd.Services
 {
     public interface IUserRepository 
     {
-        Task<UserDto?> GetUserProfile(int userId);
+        Task<UserDto?> GetUserProfile(int userId , int currentUserId );
         Task<bool> DeleteUserProfile(int userId);
-        Task<UserDto?> PutUserProfile(int userId, UserEditDto updatedUser);
+        Task<UserDto?> PutUserProfile(int userId, UserEditDto updatedUser , int currentUserId );
     }
 }

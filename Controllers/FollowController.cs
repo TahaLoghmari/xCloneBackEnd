@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TwitterCloneBackEnd.Models;
+using TwitterCloneBackEnd.Models.Dto;
 using TwitterCloneBackEnd.Services;
 
 namespace TwitterCloneBackEnd.Controllers
@@ -14,39 +15,33 @@ namespace TwitterCloneBackEnd.Controllers
 
         [Authorize]
         [HttpPost("{followerId}/{followingId}")]
-        public async Task<ActionResult<Follow>> FollowUser( int followerId , int followingId )
+        public async Task<ActionResult<FollowResponseDTO?>> FollowUser(int followerId, int followingId)
         {
-            var follow = await _follow.FollowUser( followerId , followingId ) ;
-            if ( follow == null ) return NotFound() ;
+            if (followerId == followingId) return BadRequest("Users cannot follow themselves");
+            var follow = await _follow.FollowUser(followerId, followingId);
+            if (follow == null) return NotFound();
             return Ok(follow);
         }
         [Authorize]
         [HttpDelete("unfollow/{followerId}/{followingId}")]
-        public async Task<IActionResult> UnFollowUser( int followerId , int followingId )
+        public async Task<IActionResult> UnFollowUser(int followerId, int followingId)
         {
-            var message = await _follow.UnFollowUser( followerId , followingId ) ;
-            return Ok(message);
+            var success = await _follow.UnFollowUser(followerId, followingId);
+            if (!success) return NotFound("Follow relationship not found");
+            return Ok("Successfully unfollowed");
         }
         [Authorize]
-        [HttpGet("{UserId}")]
-        public async Task<ActionResult<IEnumerable<User>>> GetUserFollowers( int UserId )
+        [HttpGet("{UserId}/{currentUserId}")]
+        public async Task<ActionResult<IEnumerable<UserDto>?>> GetUserFollowers(int UserId , int currentUserId )
         {
-            var Followers = await _follow.GetUserFollowers(UserId);
-            if ( !Followers.Any() )
-            {
-                return NotFound("No followers were found for this user ");
-            }
+            var Followers = await _follow.GetUserFollowers(UserId,currentUserId);
             return Ok(Followers);
         }
         [Authorize]
-        [HttpGet("{UserId}/followings")]
-        public async Task<ActionResult<IEnumerable<User>>> GetUserFollowings( int UserId )
+        [HttpGet("{UserId}/followings/{currentUserId}")]
+        public async Task<ActionResult<IEnumerable<UserDto>?>> GetUserFollowings( int UserId , int currentUserId  )
         {
-            var Followings = await _follow.GetUserFollowings(UserId);
-            if ( !Followings.Any() )
-            {
-                return NotFound("No followings were found for this user");
-            }
+            var Followings = await _follow.GetUserFollowings(UserId,currentUserId); 
             return Ok(Followings);
         }
     }

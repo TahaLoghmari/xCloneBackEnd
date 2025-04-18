@@ -8,9 +8,18 @@ namespace TwitterCloneBackEnd.Services
     public class LikeRepository : ILikeRepository
     {
         private readonly TwitterDbContext _context ; 
-        public LikeRepository( TwitterDbContext context ) { _context = context ; }
+        private readonly IFollowRepository _follow;
+        public LikeRepository( TwitterDbContext context, IFollowRepository follow ) 
+        { 
+            _context = context ; 
+            _follow = follow ; 
+        }
         public async Task<LikeResponseDTO?> AddLikeToComment( int userId , int commentId )
         {
+            var existingLike = await _context.Likes
+                .FirstOrDefaultAsync(l => l.CommentId == commentId && l.UserId == userId);
+            if (existingLike != null) return null; 
+
             var user = await _context.Users.FirstOrDefaultAsync( u => u.Id == userId );
             if ( user == null ) return null ;
 
@@ -27,25 +36,17 @@ namespace TwitterCloneBackEnd.Services
             _context.Likes.Add(newLike);
             await _context.SaveChangesAsync();
 
-            return new LikeResponseDTO {
-                Id = newLike.Id,
-                UserId = newLike.UserId,
-                CommentId = newLike.CommentId,
-                Creator = new UserDto {
-                    Id = user.Id,
-                    DisplayName = user.DisplayName,
-                    Username = user.UserName,
-                    Email = user.Email,
-                    ImageUrl = user.ImageUrl,
-                    CreatedAt = user.CreatedAt,
-                    FollowerCount = user.FollowerCount,
-                    FollowingCount = user.FollowingCount,
-                    BirthDate = user.BirthDate
-                }
-            };
+            var Like = await _context.Likes.Include( l => l.Creator ).FirstOrDefaultAsync( l => l.Id == newLike.Id );
+
+            bool isFollowing = await _follow.IsUserFollowing(userId, Like.UserId);
+            return LikeResponseDTO.Create(Like, isFollowing);
         }
         public async Task<LikeResponseDTO?> AddLikeToPost( int userId , int postId )
         {
+            var existingLike = await _context.Likes
+                .FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
+            if (existingLike != null) return null; 
+
             var user = await _context.Users.FirstOrDefaultAsync( u => u.Id == userId );
             if ( user == null ) return null ;
 
@@ -62,70 +63,45 @@ namespace TwitterCloneBackEnd.Services
             _context.Likes.Add(newLike);
             await _context.SaveChangesAsync();
 
-            return new LikeResponseDTO {
-                Id = newLike.Id,
-                UserId = newLike.UserId,
-                PostId = newLike.PostId,
-                Creator = new UserDto {
-                    Id = user.Id,
-                    DisplayName = user.DisplayName,
-                    Username = user.UserName,
-                    Email = user.Email,
-                    ImageUrl = user.ImageUrl,
-                    CreatedAt = user.CreatedAt,
-                    FollowerCount = user.FollowerCount,
-                    FollowingCount = user.FollowingCount,
-                    BirthDate = user.BirthDate
-                }
-            };
+            var Like = await _context.Likes.Include( l => l.Creator ).FirstOrDefaultAsync( l => l.Id == newLike.Id );
+
+            bool isFollowing = await _follow.IsUserFollowing(userId, Like.UserId);
+            return LikeResponseDTO.Create(Like, isFollowing);
+        }
+        public async Task<IEnumerable<LikeResponseDTO?>> GetLikesForComment(int commentId, int currentUserId)
+        {
+            var likes = await _context.Likes.Include(c => c.Creator)
+                .Where(l => l.CommentId == commentId)
+                .ToListAsync();
+                
+            var results = new List<LikeResponseDTO>();
+            foreach (var like in likes)
+            {
+                bool isFollowing = await _follow.IsUserFollowing(currentUserId, like.UserId);
+                var dto = LikeResponseDTO.Create(like, isFollowing);
+                if (dto != null)
+                    results.Add(dto);
+            }
+            
+            return results;
         }
 
-        public async Task<IEnumerable<LikeResponseDTO?>> GetLikesForComment(int commentId)
+       public async Task<IEnumerable<LikeResponseDTO?>> GetLikesForPost(int postId, int currentUserId)
         {
-            var Likes = await _context.Likes.Include( c => c.Creator )
-            .Where( l => l.CommentId == commentId )
-            .Select( c => new LikeResponseDTO {
-                Id = c.Id,
-                UserId = c.UserId,
-                CommentId = c.CommentId,
-                Creator = new UserDto {
-                    Id = c.Creator.Id,
-                    DisplayName = c.Creator.DisplayName,
-                    Username = c.Creator.UserName,
-                    Email = c.Creator.Email,
-                    ImageUrl = c.Creator.ImageUrl,
-                    CreatedAt = c.Creator.CreatedAt,
-                    FollowerCount = c.Creator.FollowerCount,
-                    FollowingCount = c.Creator.FollowingCount,
-                    BirthDate = c.Creator.BirthDate
-                }
-            })
-            .ToListAsync();
-            return Likes ; 
-        }
-
-        public async Task<IEnumerable<LikeResponseDTO?>> GetLikesForPost(int postId)
-        {
-            var Likes = await _context.Likes.Include( c => c.Creator )
-            .Where( l => l.PostId == postId )
-            .Select( c => new LikeResponseDTO {
-                Id = c.Id,
-                UserId = c.UserId,
-                PostId = c.PostId,
-                Creator = new UserDto {
-                    Id = c.Creator.Id,
-                    DisplayName = c.Creator.DisplayName,
-                    Username = c.Creator.UserName,
-                    Email = c.Creator.Email,
-                    ImageUrl = c.Creator.ImageUrl,
-                    CreatedAt = c.Creator.CreatedAt,
-                    FollowerCount = c.Creator.FollowerCount,
-                    FollowingCount = c.Creator.FollowingCount,
-                    BirthDate = c.Creator.BirthDate
-                }
-            })
-            .ToListAsync();
-            return Likes ; 
+            var likes = await _context.Likes.Include(c => c.Creator)
+                .Where(l => l.PostId == postId)
+                .ToListAsync();
+                
+            var results = new List<LikeResponseDTO>();
+            foreach (var like in likes)
+            {
+                bool isFollowing = await _follow.IsUserFollowing(currentUserId, like.UserId);
+                var dto = LikeResponseDTO.Create(like, isFollowing);
+                if (dto != null)
+                    results.Add(dto);
+            }
+            
+            return results;
         }
 
         public async Task<bool> RemoveLikeFromComment( int userId , int commentId )
@@ -140,6 +116,7 @@ namespace TwitterCloneBackEnd.Services
 
             _context.Likes.Remove(Like);
             await _context.SaveChangesAsync();
+
             return true ;
         }
 
@@ -156,6 +133,14 @@ namespace TwitterCloneBackEnd.Services
             _context.Likes.Remove(Like);
             await _context.SaveChangesAsync();
             return true ;
+        }
+        public bool HasLikedPost(int userId, int postId)
+        {
+            return _context.Likes.Any(l => l.PostId == postId && l.UserId == userId);
+        }
+        public bool HasLikedComment(int userId, int commentId)
+        {
+            return _context.Likes.Any(l => l.CommentId == commentId && l.UserId == userId);
         }
     }
 }

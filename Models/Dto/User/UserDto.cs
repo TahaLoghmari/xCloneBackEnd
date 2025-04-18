@@ -10,8 +10,9 @@ namespace TwitterCloneBackEnd.Models.Dto
         public DateTime CreatedAt { get ; set ; } = DateTime.UtcNow ; 
         public int FollowerCount { get ; set ; } 
         public int FollowingCount { get ; set ; } 
+        public bool HasBeenfollowed { get ; set ; } 
         public DateTime BirthDate { get ; set ; }
-        public static UserDto? Create(User user)
+        public static UserDto? Create(User user , bool followed )
         {
             if (user == null) return null;
 
@@ -25,7 +26,8 @@ namespace TwitterCloneBackEnd.Models.Dto
                 CreatedAt = user.CreatedAt,
                 FollowerCount = user.FollowerCount,
                 FollowingCount = user.FollowingCount,
-                BirthDate = user.BirthDate
+                BirthDate = user.BirthDate,
+                HasBeenfollowed = followed ,
             };
         }
 

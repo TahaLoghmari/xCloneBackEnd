@@ -21,13 +21,14 @@ public class PostResponseDto
 
     public int? OriginalPostId { get; set; }
     public bool IsRetweet { get; set; }
+    public bool HasLiked { get ; set ; } 
     public PostResponseDto? OriginalPost { get; set; }
     public UserDto Creator { get ; set ; } = null! ;
-    public static PostResponseDto? Create(Post post)
+    public static PostResponseDto? Create(Post post , bool Liked , bool followed )
     {
         if (post == null) return null;
 
-        var userDto = post.Creator != null ? UserDto.Create(post.Creator) : null;
+        var userDto = post.Creator != null ? UserDto.Create(post.Creator,followed) : null;
 
         return new PostResponseDto
         {
@@ -45,7 +46,8 @@ public class PostResponseDto
             IsRetweet = post.IsRetweet,
             OriginalPostId = post.OriginalPostId,
             Creator = userDto! , 
-            OriginalPost = post.OriginalPost != null ? Create(post.OriginalPost) : null
+            OriginalPost = post.OriginalPost != null ? Create(post.OriginalPost,false,false) : null,
+            HasLiked = Liked
         };
     }
 
