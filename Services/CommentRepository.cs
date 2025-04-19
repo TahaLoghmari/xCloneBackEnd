@@ -16,7 +16,52 @@ namespace TwitterCloneBackEnd.Services
             _like = like ; 
             _follow = follow ;
         }
+        public async Task<IEnumerable<CommentResponseDto?>> GetUserCommentsOnPost(int userId, int postId, int currentUserId)
+        {
+            var comments = await _context.Comments
+                .AsNoTracking()
+                .Include(c => c.Creator)
+                .Where(c => c.UserId == userId && c.PostId == postId)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
 
+            if (comments == null || !comments.Any())
+                return new List<CommentResponseDto?>();
+
+            bool isFollowing = await _follow.IsUserFollowing(currentUserId, userId);
+            
+            return comments.Select(c => CommentResponseDto.Create(
+                c,
+                _like.HasLikedComment(currentUserId, c.Id),
+                isFollowing
+            )).ToList();
+        }
+        public async Task<IEnumerable<PostResponseDto?>> GetPostsWithUserComments(int userId, int currentUserId)
+        {
+            var postIds = await _context.Comments
+                .Where(c => c.UserId == userId)
+                .Select(c => c.PostId)
+                .Distinct()
+                .ToListAsync();
+            var posts = await _context.Posts
+                .AsNoTracking()
+                .Include(p => p.Creator)
+                .Include(p => p.OriginalPost)
+                .ThenInclude(op => op != null ? op.Creator : null)
+                .Where(p => postIds.Contains(p.Id))
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            var result = new List<PostResponseDto?>();
+            foreach (var post in posts)
+            {
+                bool isLiked = _like.HasLikedPost(currentUserId, post.Id);
+                bool isFollowing = await _follow.IsUserFollowing(currentUserId, post.UserId);
+                result.Add(PostResponseDto.Create(post, isLiked, isFollowing));
+            }
+
+            return result;
+        }
         public async Task<CommentResponseDto?> AddComment(CommentCreationDto newCommentDto , int userId , int postId )
         {
             var post = await _context.Posts.FirstOrDefaultAsync( p => p.Id == postId );

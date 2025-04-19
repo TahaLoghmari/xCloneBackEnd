@@ -38,6 +38,21 @@ namespace TwitterCloneBackEnd.Controllers
             return Ok(comment);
         }
         [Authorize]
+        [HttpGet("user/{userId}/post/{postId}/{currentUserId}")]
+        public async Task<ActionResult<IEnumerable<CommentResponseDto?>>> GetUserCommentsOnPost(int userId, int postId, int currentUserId)
+        {
+            var comments = await _comment.GetUserCommentsOnPost(userId, postId, currentUserId);
+            return Ok(comments);
+        }
+        [Authorize]
+        [HttpGet("user/{userId}/commented-posts/{currentUserId}")]
+        public async Task<ActionResult<IEnumerable<PostResponseDto?>>> GetPostsWithUserComments(int userId, int currentUserId)
+        {
+            var posts = await _comment.GetPostsWithUserComments(userId, currentUserId);
+            if (posts == null || !posts.Any()) return NotFound("No posts with comments were found for this user");
+            return Ok(posts);
+        }
+        [Authorize]
         [HttpGet("post/{postId}/{currentUserId}")]
         public async Task<ActionResult<IEnumerable<CommentResponseDto?>>> GetCommentsForPost( int postId , int currentUserId) 
         {
