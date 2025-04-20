@@ -1,20 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 using TwitterCloneBackEnd.Models;
 using TwitterCloneBackEnd.Models.Data;
+using TwitterCloneBackEnd.Models.Dto;
 
 namespace TwitterCloneBackEnd.Services
 {
     public class NotificationRepository : INotificationRepository
     {
         private readonly TwitterDbContext _context ;
-        private readonly RealTimeNotificationService _realTimeService; 
-        public NotificationRepository( TwitterDbContext context , RealTimeNotificationService realTimeService )
+        public NotificationRepository( TwitterDbContext context  )
         {
-            _realTimeService = realTimeService ;
             _context = context ; 
         }
 
-        public async Task<Notification?> CreateNotification(int creatorUserId, int receiverUserId, NotificationType type, int? postId = null, int? commentId = null, int? followId = null)
+        public async Task<NotificationResponseDTO?> CreateNotification(int creatorUserId, int receiverUserId, NotificationType type, int? postId = null, int? commentId = null, int? followId = null)
         {
             User? receiver = await _context.Users.FirstOrDefaultAsync( u => u.Id == receiverUserId );
             User? creator = await _context.Users.FirstOrDefaultAsync( u => u.Id == creatorUserId ); 
@@ -55,17 +54,26 @@ namespace TwitterCloneBackEnd.Services
                 CommentId = commentId,
                 FollowId = followId,
                 Content = message,
-                IsRead = false 
+                IsRead = false ,
+                Type = type
             };
-            if (newNotification != null)
-            {
-                await _realTimeService.SendNotificationToUser(receiverUserId, newNotification);
-                _context.Notifications.Add(newNotification);
-                await _context.SaveChangesAsync();
-                return newNotification;
-            }
-            return null ;
             
+            _context.Notifications.Add(newNotification);
+            await _context.SaveChangesAsync();
+            
+            await _context.Entry(newNotification).Reference(n => n.Creator).LoadAsync();
+            await _context.Entry(newNotification).Reference(n => n.Receiver).LoadAsync();
+            
+            if (newNotification.PostId.HasValue)
+                await _context.Entry(newNotification).Reference(n => n.RelatedPost).LoadAsync();
+            
+            if (newNotification.CommentId.HasValue)
+                await _context.Entry(newNotification).Reference(n => n.RelatedComment).LoadAsync();
+            
+            if (newNotification.FollowId.HasValue)
+                await _context.Entry(newNotification).Reference(n => n.RelatedFollow).LoadAsync();
+                
+            return NotificationResponseDTO.Create(newNotification);
         }
         public async Task<bool> DeleteAllNotificationsForUser(int userId)
         {
@@ -83,20 +91,38 @@ namespace TwitterCloneBackEnd.Services
             await _context.SaveChangesAsync();
             return true ; 
         }
-        public async Task<Notification?> GetNotificationById(int notificationId)
+        public async Task<NotificationResponseDTO?> GetNotificationById(int notificationId)
         {
-            var notification = await _context.Notifications.FirstOrDefaultAsync( n => n.Id == notificationId );
-            return notification;
+            var notification = await _context.Notifications
+            .Include(n => n.Creator)
+            .Include(n => n.Receiver)
+            .Include(n => n.RelatedPost)
+            .Include(n => n.RelatedComment)
+            .Include(n => n.RelatedFollow)
+            .FirstOrDefaultAsync( n => n.Id == notificationId );
+            return NotificationResponseDTO.Create(notification);
         }
-        public async Task<IEnumerable<Notification>> GetNotificationsForUser(int userId)
+        public async Task<IEnumerable<NotificationResponseDTO>> GetNotificationsForUser(int userId)
         {
-            var notifications = await _context.Notifications.Where( n => n.ReceiverUserId == userId ).ToListAsync();
-            return notifications ;
+            var notifications = await _context.Notifications.Where( n => n.ReceiverUserId == userId )
+            .Include(n => n.Creator)
+            .Include(n => n.Receiver)
+            .Include(n => n.RelatedPost)
+            .Include(n => n.RelatedComment)
+            .Include(n => n.RelatedFollow)
+            .ToListAsync();
+            return notifications.Select(n => NotificationResponseDTO.Create(n)).Where(n => n != null);
         }
-        public async Task<IEnumerable<Notification>> GetUnreadNotificationsForUser(int userId)
+        public async Task<IEnumerable<NotificationResponseDTO>> GetUnreadNotificationsForUser(int userId)
         {
-            var notifications = await _context.Notifications.Where( n => n.ReceiverUserId == userId && n.IsRead == false).ToListAsync();
-            return notifications ;
+            var notifications = await _context.Notifications.Where( n => n.ReceiverUserId == userId && n.IsRead == false)
+            .Include(n => n.Creator)
+            .Include(n => n.Receiver)
+            .Include(n => n.RelatedPost)
+            .Include(n => n.RelatedComment)
+            .Include(n => n.RelatedFollow)
+            .ToListAsync();
+            return notifications.Select(n => NotificationResponseDTO.Create(n)).Where(n => n != null);
         }
         public async Task<bool> MarkAllNotificationsAsRead(int userId)
         {
@@ -104,10 +130,7 @@ namespace TwitterCloneBackEnd.Services
             
             if ( !notifications.Any() ) return false ;
 
-            foreach (var notification in notifications)
-            {
-                notification.IsRead = true;
-            }
+            foreach (var notification in notifications) notification.IsRead = true;
 
             await _context.SaveChangesAsync();
             return true;

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("xCloneBackEnd")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9a9ba9f9a1152b325d2326640c8d5490ff7aa301")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+20d63490cb64aa1752712ab5122ce08c9531a9af")]
 [assembly: System.Reflection.AssemblyProductAttribute("xCloneBackEnd")]
 [assembly: System.Reflection.AssemblyTitleAttribute("xCloneBackEnd")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

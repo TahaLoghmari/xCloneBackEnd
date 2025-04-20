@@ -17,6 +17,14 @@ namespace TwitterCloneBackEnd.Controllers
             _Post = Post ; 
         }
         [Authorize]
+        [HttpGet("followingsPosts/{userId}")]
+        public async Task<ActionResult<IEnumerable<PostResponseDto?>>> GetFollowingsPosts(int userId)
+        {
+            var posts = await _Post.GetFollowingsPosts(userId);
+            if (posts == null) return NotFound("No posts were found from your followings");
+            return Ok(posts);
+        }
+        [Authorize]
         [HttpGet("{UserId}/posts/{currentUserId}")]
         public async Task<ActionResult<IEnumerable<PostResponseDto?>>> GetUserPosts( int UserId , int currentUserId )
         {

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using TwitterCloneBackEnd.Hubs;
 using TwitterCloneBackEnd.Models;
 using TwitterCloneBackEnd.Models.Data;
 using TwitterCloneBackEnd.Services;
@@ -85,7 +84,6 @@ builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ILikeRepository, LikeRepository>();
 builder.Services.AddScoped<IFollowRepository, FollowRepository>();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSingleton<RealTimeNotificationService>();
 
 var app = builder.Build();
 app.UseExceptionHandler(exceptionHandlerApp =>
@@ -112,7 +110,6 @@ else
     app.UseCors("Production");
     Console.WriteLine("Running in Production mode - CORS configured for production domain");
 }
-app.MapHub<NotificationHub>("/hubs/notification");
 app.UseHttpsRedirection();
 
 app.Use(async (context, next) =>

@@ -9,10 +9,12 @@ namespace TwitterCloneBackEnd.Services
     {
         private readonly TwitterDbContext _context ; 
         private readonly IFollowRepository _follow;
-        public LikeRepository( TwitterDbContext context, IFollowRepository follow ) 
+        private readonly INotificationRepository _notificationRepository;
+        public LikeRepository( TwitterDbContext context, IFollowRepository follow , INotificationRepository notificationRepository) 
         { 
             _context = context ; 
             _follow = follow ; 
+            _notificationRepository = notificationRepository;
         }
         public async Task<LikeResponseDTO?> AddLikeToComment( int userId , int commentId )
         {
@@ -35,6 +37,16 @@ namespace TwitterCloneBackEnd.Services
 
             _context.Likes.Add(newLike);
             await _context.SaveChangesAsync();
+
+            if (userId != comment.UserId)
+            {
+                await _notificationRepository.CreateNotification(
+                    creatorUserId: userId,
+                    receiverUserId: comment.UserId,
+                    type: NotificationType.Like,
+                    commentId: commentId
+                );
+            }
 
             var Like = await _context.Likes.Include( l => l.Creator ).FirstOrDefaultAsync( l => l.Id == newLike.Id );
 
@@ -62,6 +74,16 @@ namespace TwitterCloneBackEnd.Services
 
             _context.Likes.Add(newLike);
             await _context.SaveChangesAsync();
+
+            if (userId != post.UserId)
+            {
+                await _notificationRepository.CreateNotification(
+                    creatorUserId: userId,
+                    receiverUserId: post.UserId,
+                    type: NotificationType.Like,
+                    postId: postId
+                );
+            }
 
             var Like = await _context.Likes.Include( l => l.Creator ).FirstOrDefaultAsync( l => l.Id == newLike.Id );
 

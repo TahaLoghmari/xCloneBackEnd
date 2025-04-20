@@ -13,7 +13,7 @@ namespace TwitterCloneBackEnd.Services
         private readonly ILikeRepository _like ; 
         private readonly IFollowRepository _follow;
         
-        public PostRepository( TwitterDbContext context , ILikeRepository like , IFollowRepository follow) 
+        public PostRepository( TwitterDbContext context , ILikeRepository like , IFollowRepository follow ) 
         {
             _context = context ; 
             _like = like ; 
@@ -119,7 +119,32 @@ namespace TwitterCloneBackEnd.Services
 
             return result;
         }
+        public async Task<IEnumerable<PostResponseDto?>> GetFollowingsPosts(int userId)
+        {
+            var followingIds = await _context.Follows
+                .Where(f => f.FollowerId == userId)
+                .Select(f => f.FollowingId)
+                .ToListAsync();
 
+            var posts = await _context.Posts
+                .AsNoTracking()
+                .Include(p => p.Creator)
+                .Include(p => p.OriginalPost)
+                .ThenInclude(op => op != null ? op.Creator : null)
+                .Where(p => followingIds.Contains(p.UserId))
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            var result = new List<PostResponseDto?>();
+            foreach (var post in posts)
+            {
+                bool isLiked = _like.HasLikedPost(userId, post.Id);
+                bool isFollowing = await _follow.IsUserFollowing(userId, post.UserId);
+                result.Add(PostResponseDto.Create(post, isLiked, isFollowing));
+            }
+
+            return result;
+        }
         public async Task<PostResponseDto?> UpdatePost(int postId, PostCreationDto updatedPost, int currentUserId)
         {
             var Post = await _context.Posts.Include(p => p.Creator).FirstOrDefaultAsync(p => p.Id == postId);
