@@ -31,9 +31,12 @@ builder.Services.AddCors(options =>
             .AllowCredentials());
 });
 builder.Services.AddControllers();
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.AddDbContext<TwitterDbContext>(options => {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "File Uploader API", Version = "v1" });

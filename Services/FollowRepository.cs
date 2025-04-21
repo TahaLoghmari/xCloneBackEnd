@@ -8,9 +8,11 @@ namespace TwitterCloneBackEnd.Services
     public class FollowRepository : IFollowRepository
     {
         private readonly TwitterDbContext _context ; 
-        public FollowRepository( TwitterDbContext context ) 
+        private readonly INotificationRepository _notificationRepository;
+        public FollowRepository( TwitterDbContext context , INotificationRepository notificationRepository) 
         {
             _context = context ; 
+            _notificationRepository = notificationRepository;
         }
         public async Task<bool> IsUserFollowing(int followerId, int followingId)
         {
@@ -39,6 +41,14 @@ namespace TwitterCloneBackEnd.Services
             following.FollowerCount++;
             
             await _context.SaveChangesAsync();
+
+            
+            await _notificationRepository.CreateNotification(
+                creatorUserId: followerId,
+                receiverUserId: followingId,
+                type: NotificationType.Follow,
+                followId: follow.Id
+            );
 
             follow = await _context.Follows
                 .Include(f => f.Follower)

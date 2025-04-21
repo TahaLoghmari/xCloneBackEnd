@@ -10,11 +10,13 @@ namespace TwitterCloneBackEnd.Services
         private readonly TwitterDbContext _context ; 
         private readonly ILikeRepository _like ; 
         private readonly IFollowRepository _follow ; 
-        public CommentRepository( TwitterDbContext context , ILikeRepository like , IFollowRepository follow) 
+        private readonly INotificationRepository _notificationRepository;
+        public CommentRepository( TwitterDbContext context , ILikeRepository like , IFollowRepository follow , INotificationRepository notificationRepository) 
         { 
             _context = context ; 
             _like = like ; 
             _follow = follow ;
+            _notificationRepository = notificationRepository;
         }
         public async Task<IEnumerable<CommentResponseDto?>> GetUserCommentsOnPost(int userId, int postId, int currentUserId)
         {
@@ -82,6 +84,13 @@ namespace TwitterCloneBackEnd.Services
             _context.Comments.Add(newComment);
             await _context.SaveChangesAsync();
 
+            await _notificationRepository.CreateNotification(
+                    creatorUserId: userId,
+                    receiverUserId: post.UserId ,
+                    type: NotificationType.Reply,
+                    commentId: newComment.Id
+                );
+
             var createdReply = await _context.Comments.Include(c => c.Creator).FirstOrDefaultAsync( c => c.Id == newComment.Id );
             
             return CommentResponseDto.Create(createdReply,_like.HasLikedComment(userId,createdReply.Id),false);
@@ -105,6 +114,13 @@ namespace TwitterCloneBackEnd.Services
 
             _context.Comments.Add(newComment);
             await _context.SaveChangesAsync();
+
+            await _notificationRepository.CreateNotification(
+                    creatorUserId: userId,
+                    receiverUserId: parentComment.UserId ,
+                    type: NotificationType.Reply,
+                    commentId: newComment.Id
+                );
 
             var createdReply = await _context.Comments
                 .AsNoTracking()
